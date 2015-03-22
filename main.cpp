@@ -7,20 +7,6 @@
 #include "comath.h"
 using namespace std;
 
-/*
- * TODO: Add tests:
- *    std::vector<double> v1(10), v2(10), v3;
-      for (int i = 0; i < v1.size(); ++i) v1[i] = v2[i] = i;
-      vec::print(v1);
-      std::cerr << '+' << std::endl;
-      vec::print(v2);
-      std::cerr << '+' << std::endl;
-      vec::print(v1);
-      vec::sum(v3, v1, v2, v1);
-      std::cerr << '=' << std::endl;
-      vec::print(v3, std::cerr);
- */
-
 struct TimePrinter {
   timeval t1, t2;
   std::string name;
