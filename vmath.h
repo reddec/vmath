@@ -49,9 +49,9 @@ struct Calc : public FuncType {
    * @return True if computation done. Otherwise (vectors have not same size)
    * False
    */
-  template <class T>
-  inline bool operator()(std::vector<T> &result, const std::vector<T> &a,
-                         const std::vector<T> &b) const noexcept {
+  template <class VectorType>
+  inline bool operator()(VectorType &result, const VectorType &a,
+                         const VectorType &b) const noexcept {
     if (a.size() != b.size()) return false;
     if (result.size() < a.size()) result.resize(a.size());
 #pragma omp parallel for
@@ -60,15 +60,15 @@ struct Calc : public FuncType {
     return true;
   }
 
-  template <class T, class... Vectors>
-  inline bool operator()(std::vector<T> &result, const std::vector<T> &a,
-                         const std::vector<T> &b,
-                         const Vectors &... vectors) const noexcept {
+  template <class VectorType, class... Vectors>
+  inline bool operator()(VectorType &result, const VectorType &a,
+                         const VectorType &b, const Vectors &... vectors) const
+      noexcept {
     return operator()(result, a, b) &&operator()(result, result, vectors...);
   }
 
-  template <class T>
-  inline void operator()(std::vector<T> &result, const std::vector<T> &a,
+  template <class VectorType, class T>
+  inline void operator()(VectorType &result, const VectorType &a,
                          const T &b) const noexcept {
 #pragma omp parallel for
     for (size_t i = 0; i < a.size(); ++i)
@@ -80,13 +80,14 @@ const static Calc<DefaultOperators::Sum> sum;
 const static Calc<DefaultOperators::Mul> mul;
 const static Calc<DefaultOperators::Div> div;
 
-template <class T>
-static inline T accumulate(const std::vector<T> &v,
+template <class T, class VectorType>
+static inline T accumulate(T &result, const VectorType &v,
                            const T &init = T()) noexcept {
   T res = init;
 #pragma omp parallel for reduction(+ : res)
   for (size_t i = 0; i < v.size(); ++i) res += v[i];
-  return res;
+  result = res;
+  return result;
 }
 }
 #endif  // VMATH
