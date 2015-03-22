@@ -18,6 +18,7 @@ Build requirements:
 -   CMake
 -   Make
 -   dpkg
+-   TCLAP
 
 Will be created .deb package with
 
