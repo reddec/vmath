@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include <tclap/CmdLine.h>
 #include "comath.h"
+
 using namespace std;
 
 struct TimePrinter {
