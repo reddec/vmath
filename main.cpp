@@ -1,10 +1,25 @@
+#include "vmath.h"
 #include <iostream>
+#include <string>
 #include <vector>
 #include <sys/time.h>
-#include <algorithm>
-#include <cmath>
+#include <tclap/CmdLine.h>
 #include "comath.h"
 using namespace std;
+
+/*
+ * TODO: Add tests:
+ *    std::vector<double> v1(10), v2(10), v3;
+      for (int i = 0; i < v1.size(); ++i) v1[i] = v2[i] = i;
+      vec::print(v1);
+      std::cerr << '+' << std::endl;
+      vec::print(v2);
+      std::cerr << '+' << std::endl;
+      vec::print(v1);
+      vec::sum(v3, v1, v2, v1);
+      std::cerr << '=' << std::endl;
+      vec::print(v3, std::cerr);
+ */
 
 struct TimePrinter {
   timeval t1, t2;
@@ -19,49 +34,90 @@ struct TimePrinter {
     double elapsedTime;
     elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;     // sec to ms
     elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;  // us to ms
-    std::cout << name << " tooks " << elapsedTime << " ms" << std::endl;
+    std::cerr << name << " tooks " << elapsedTime << " ms" << std::endl;
   }
 };
 
-template <class T>
-std::ostream &operator<<(std::ostream &out, const std::vector<T> &data) {
-  out << '{';
-  for (auto &v : data) out << ' ' << v;
-  out << " }";
-  return out;
-}
+int main(int argc, char *argv[]) {
+  TCLAP::CmdLine cmd("Vector math", ' ', "1.0");
+  TCLAP::SwitchArg alter_djonson("a", "alter-djonson",
+                                 "Calculate Alter-Djonson", false);
+  TCLAP::SwitchArg normalize("n", "normalize", "Normalize (/max)", false);
+  TCLAP::ValueArg<int> columnNum("c", "column", "Column number", false, 0,
+                                 "int");
+  TCLAP::SwitchArg reduce("s", "sum", "Sum of numbers", false);
+  TCLAP::SwitchArg mx("x", "max", "Max of numbers", false);
+  TCLAP::SwitchArg mn("m", "min", "Min of numbers", false);
+  TCLAP::SwitchArg av("v", "avg", "Average of numbers", false);
+  TCLAP::SwitchArg total("t", "total", "Sum/Min/Max/Avg", false);
+  std::vector<double> v;
+  std::string tmp, line;
+  std::stringstream ss;
+  uint64_t count = 0;
+  double val, sum = 0, min = INFINITY, max = -INFINITY;
+  cmd.add(alter_djonson);
+  cmd.add(columnNum);
+  cmd.add(normalize);
+  cmd.add(reduce);
+  cmd.add(mx);
+  cmd.add(mn);
+  cmd.add(av);
+  cmd.add(total);
+  cmd.parse(argc, argv);
 
-int main() {
-  size_t count = 1;
-  std::vector<double> v(10000);
-  std::vector<double> v2(10000);
-  std::vector<double> v3;
-  double accum, strikeSlip;
-
-  for (size_t i = 0; i < v.size(); ++i) {
-    v[i] = i % 2 == 0 ? -1 : 1;
-    v2[i] = v[i];
+  std::cerr << "Reading standart input" << std::endl;
+  while (!std::cin.eof()) {
+    std::getline(std::cin, line);
+    ss.str(line);
+    for (int i = 0; i < columnNum.getValue() - 1 && !ss.eof(); ++i) {
+      ss >> tmp;
+    }
+    if (ss.eof()) break;
+    ss >> val;
+    sum += val;
+    if (val < min) min = val;
+    if (val > max) max = val;
+    if (!reduce.isSet() && !mn.isSet() && !mx.isSet() && !total.isSet() &&
+        !av.isSet())
+      v.push_back(val);
+    ++count;
   }
-  {
-    v3 = v + v2;
-    TimePrinter p("Add (omp)");
-    for (size_t i = 0; i < count; ++i) v3 = v + v2;
+  std::cerr << "Read: " << count << " points" << std::endl;
+  if (reduce.isSet()) {
+    std::cout << sum << std::endl;
+    return 0;
   }
-  {
-    TimePrinter p("Sum (omp)");
-    for (size_t i = 0; i < count; ++i) accum = sum(v, fabs);
+  if (mx.isSet()) {
+    std::cout << max << std::endl;
+    return 0;
   }
-  {
-    TimePrinter p("Strike-slip (omp)");
-    for (size_t i = 0; i < count; ++i) strikeSlip = strike_slip(v, 10);
+  if (mn.isSet()) {
+    std::cout << min << std::endl;
+    return 0;
   }
-  {
-    TimePrinter p("Alter-Djohnson (omp)");
-    for (size_t i = 0; i < count; ++i) v3 = alter_johnson(v);
+  if (av.isSet()) {
+    std::cout << sum / count << std::endl;
+    return 0;
   }
-  std::cout << "------------------------------" << std::endl;
-  // std::cout << v << std::endl;
-  std::cout << "OMP: " << accum << std::endl;
-  std::cout << "SS: " << strikeSlip << std::endl;
+  if (total.isSet()) {
+    std::cout << sum << '\t' << min << '\t' << max << '\t' << sum / count
+              << std::endl;
+    return 0;
+  }
+  if (normalize.isSet()) {
+    TimePrinter printer("Normalize");
+    auto maxe = *std::max_element(std::begin(v), std::end(v));
+    if (maxe != 0) {
+      vec::div(v, v, maxe);
+    } else
+      std::cerr << "MAX is 0" << std::endl;
+  }
+  if (alter_djonson.isSet()) {
+    TimePrinter printer("Alter-Djonson");
+    v = vec::alter_johnson(v);
+  }
+  for (auto &val : v) {
+    std::cout << val << std::endl;
+  }
   return 0;
 }
