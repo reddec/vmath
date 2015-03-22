@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
   TCLAP::ValueArg<int> columnNum("c", "column", "Column number", false, 0,
                                  "int");
   TCLAP::SwitchArg reduce("s", "sum", "Sum of numbers", false);
+  TCLAP::SwitchArg echo("e", "echo", "Print last value", false);
   TCLAP::SwitchArg mx("x", "max", "Max of numbers", false);
   TCLAP::SwitchArg mn("m", "min", "Min of numbers", false);
   TCLAP::SwitchArg av("v", "avg", "Average of numbers", false);
@@ -49,12 +50,14 @@ int main(int argc, char *argv[]) {
   cmd.add(mn);
   cmd.add(av);
   cmd.add(total);
+  cmd.add(echo);
   cmd.parse(argc, argv);
 
   std::cerr << "Reading standart input" << std::endl;
   while (!std::cin.eof()) {
     std::getline(std::cin, line);
     ss.str(line);
+    ss.seekg(0);
     for (int i = 0; i < columnNum.getValue() - 1 && !ss.eof(); ++i) {
       ss >> tmp;
     }
@@ -66,6 +69,7 @@ int main(int argc, char *argv[]) {
     if (!reduce.isSet() && !mn.isSet() && !mx.isSet() && !total.isSet() &&
         !av.isSet())
       v.push_back(val);
+    if (echo.isSet()) std::cout << val << std::endl;
     ++count;
   }
   std::cerr << "Read: " << count << " points" << std::endl;
