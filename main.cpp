@@ -59,6 +59,7 @@ int main(int argc, char *argv[]) {
     std::getline(std::cin, line);
     ss.str(line);
     ss.seekg(0);
+    if (std::cin.eof()) break;
     for (int i = 0; i < columnNum.getValue() - 1 && !ss.eof(); ++i) {
       ss >> tmp;
     }
@@ -96,7 +97,7 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   if (normalize.isSet()) {
-    TimePrinter printer("Normalize");
+    const TimePrinter printer("Normalize");
     auto maxe = *std::max_element(std::begin(v), std::end(v));
     if (maxe != 0) {
       vec::div(v, v, maxe);
@@ -104,9 +105,10 @@ int main(int argc, char *argv[]) {
       std::cerr << "MAX is 0" << std::endl;
   }
   if (alter_djonson.isSet()) {
-    TimePrinter printer("Alter-Djonson");
+    const TimePrinter printer("Alter-Djonson");
     v = vec::alter_johnson(v);
   }
+  std::cerr << "Output: " << v.size() << " points" << std::endl;
   for (auto &val : v) {
     std::cout << val << std::endl;
   }
