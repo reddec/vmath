@@ -12,6 +12,13 @@ struct DefaultOperators {
     }
   };
 
+  struct Rem {
+    template <class T>
+    inline T operator()(const T &a, const T &b) const noexcept {
+      return a - b;
+    }
+  };
+
   struct Mul {
     template <class T>
     inline T operator()(const T &a, const T &b) const noexcept {
@@ -60,6 +67,15 @@ struct Calc : public FuncType {
     return true;
   }
 
+  /**
+   * @brief operator () Binary operation for each element for each vector
+   * @param result Result container
+   * @param a Left argument
+   * @param b Right argument
+   * @param vectors Next arguments
+   * @return True if computation done. Otherwise (vectors have not same size)
+   * False
+   */
   template <class VectorType, class... Vectors>
   inline bool operator()(VectorType &result, const VectorType &a,
                          const VectorType &b, const Vectors &... vectors) const
@@ -68,6 +84,12 @@ struct Calc : public FuncType {
   }
 
   template <class VectorType, class T>
+  /**
+   * @brief operator () Binary opertation for each element with constant
+   * @param result Result container
+   * @param a Left argument
+   * @param b Right argument
+   */
   inline void operator()(VectorType &result, const VectorType &a,
                          const T &b) const noexcept {
 #pragma omp parallel for
@@ -77,6 +99,7 @@ struct Calc : public FuncType {
 };
 
 const static Calc<DefaultOperators::Sum> sum;
+const static Calc<DefaultOperators::Rem> rem;
 const static Calc<DefaultOperators::Mul> mul;
 const static Calc<DefaultOperators::Div> div;
 
